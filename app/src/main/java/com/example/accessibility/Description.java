@@ -46,6 +46,8 @@ public class Description extends AppCompatActivity {
     String inputPath;
     ImageView loading;
     VideoView video;
+    AppCompatButton compress;
+    String pre_comp_op;
     public static long duration;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +58,13 @@ public class Description extends AppCompatActivity {
         video=findViewById(R.id.desc_video);
         AppCompatButton desc=findViewById(R.id.start_desc);
         inputPath=getIntent().getStringExtra("path");
+        compress=findViewById(R.id.compress_desc);
+        compress.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                compress();
+            }
+        });
         desc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -238,8 +247,79 @@ public class Description extends AppCompatActivity {
                                 System.out.println("Path Is:"+output);
                                 desc_updates.setText("Video Created");
                                 loading.setVisibility(View.INVISIBLE);
-                                video.setVideoPath(output);
-                                video.start();
+                                pre_comp_op=output;
+                                //video.setVideoPath(output);
+                                //video.start();
+                            }
+                        });
+                    } catch (FFmpegCommandAlreadyRunningException e) {
+                        // Handle if FFmpeg is already running
+                        e.printStackTrace();
+                    }
+                }
+            });
+        } catch (FFmpegNotSupportedException e) {
+            Toast.makeText(getApplicationContext(), "issue", Toast.LENGTH_SHORT);
+            System.out.println("\n---------\nISSUE\n");
+            // Handle if FFmpeg is not supported by device
+        }
+    }
+    public void compress(){
+        loading.setVisibility(View.VISIBLE);
+        FFmpeg ffmpeg3 = FFmpeg.getInstance(getApplicationContext());
+        try {
+            ffmpeg3.loadBinary(new LoadBinaryResponseHandler() {
+                @Override
+                public void onStart() {
+                    Toast.makeText(getApplicationContext(), "onStart", Toast.LENGTH_SHORT);
+                }
+
+                @Override
+                public void onFailure() {
+                    Toast.makeText(getApplicationContext(), "onFailure", Toast.LENGTH_SHORT);
+                }
+
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(getApplicationContext(), "onSuccess", Toast.LENGTH_SHORT);
+                }
+
+                @Override
+                public void onFinish() {
+
+                    Toast.makeText(getApplicationContext(), "onFinish", Toast.LENGTH_SHORT);
+                    FFmpeg ffmpeg = FFmpeg.getInstance(getApplicationContext());
+                    try {
+                        //ffmpeg -i input.mp4 -vcodec libx265 -crf 28 output.mp4
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                        String output= predir+"/"+timestamp.toString()+".mp4";
+                        String[] cmd = {"-i",pre_comp_op,"-vcodec","libx264","-crf","28",output};
+                        // String[] cmd = {"-i", inputPath, "-vf","ass="+subtitlePath,output};
+                        ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
+                            @Override
+                            public void onStart() {
+                                System.out.println("\n---------COMMAND\nSTART\n");
+                            }
+                            @Override
+                            public void onProgress(String message) {
+                                System.out.println("Second Task: Progress"+message);
+                            }
+                            @Override
+                            public void onFailure(String message) {
+                                System.out.println("\n---------COMMAND\nFAILURE\n" + message);
+                            }
+                            @Override
+                            public void onSuccess(String message) {
+                                System.out.println("\n---------COMMAND\nSUCCESS\n");
+                            }
+                            @Override
+                            public void onFinish() {
+                                System.out.println("\n---------COMMAND\nFINISH\n");
+                                System.out.println("Path Is:"+output);
+                                desc_updates.setText("Video Compressed");
+                                loading.setVisibility(View.INVISIBLE);
+                                //video.setVideoPath(output);
+                                //video.start();
                             }
                         });
                     } catch (FFmpegCommandAlreadyRunningException e) {

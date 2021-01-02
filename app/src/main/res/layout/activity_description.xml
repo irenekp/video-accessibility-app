@@ -30,7 +30,7 @@
         android:layout_height="72dp"
         android:layout_marginStart="96dp"
         android:layout_marginTop="152dp"
-
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,10 +39,8 @@
         android:layout_width="296dp"
         android:layout_height="250dp"
         android:layout_marginStart="56dp"
-        android:layout_marginTop="416dp"
+        android:layout_marginTop="328dp"
         android:visibility="gone"
-        android:flow_horizontalAlign="center"
-        android:flow_verticalAlign="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -59,4 +57,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"></TextView>
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/compress_desc"
+        android:layout_width="170dp"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="120dp"
+        android:layout_marginTop="648dp"
+        android:background="@drawable/button"
+        android:elevation="4dp"
+        android:text="Compress!"
+        android:textColor="@color/main"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
