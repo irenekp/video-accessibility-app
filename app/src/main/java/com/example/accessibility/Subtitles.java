@@ -130,7 +130,8 @@ public class Subtitles extends AppCompatActivity {
                                                         //String output= Environment.getExternalStorageDirectory() +"/"+ app_dir+"/subs.ass";
                                                         String predir=Environment.getExternalStorageDirectory() +"/"+ app_dir;
                                                         String output= Environment.getExternalStorageDirectory() +"/"+ app_dir+"/"+timestamp.toString()+".mp4";
-                                                        String[] cmd = {"-i","FONTCONFIG_FILE="+predir+"/font.conf",inputPath,"-vf","ass="+predir+"/subs.ass",output};
+                                                        // String[] cmd = {"-i",input,"-i",subs,"-c","copy","-c:s","mov_text",output};
+                                                        String[] cmd = {"-i",inputPath,"-i",subtitlePath,"-c","copy","-c:s","mov_text",output};
                                                         // String[] cmd = {"-i", inputPath, "-vf","ass="+subtitlePath,output};
                                                         ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                                                             @Override
