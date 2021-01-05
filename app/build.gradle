@@ -38,6 +38,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     //Video Manip Library
     implementation 'com.writingminds:FFmpegAndroid:0.3.2'
-    //Send and Recieve Data
+    //Send and Recieve Dataå
     implementation 'com.squareup.okhttp3:okhttp:3.4.1'
 }

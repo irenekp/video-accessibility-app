@@ -1,4 +1,4 @@
-package com.example.accessibility;
+    package com.example.accessibility;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;

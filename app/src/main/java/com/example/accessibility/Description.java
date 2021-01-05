@@ -6,10 +6,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -33,8 +37,23 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunnin
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okio.BufferedSink;
+import okio.Okio;
 
 import static android.view.View.VISIBLE;
 
@@ -50,6 +69,8 @@ public class Description extends AppCompatActivity {
     //String pre_comp_op;
     static String output;
     public static long duration;
+
+    static long endtime = 0, starttime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +181,15 @@ public class Description extends AppCompatActivity {
                 // Get the file instance
                 // File file = new File(path);
                 // Initiate the upload
-                local_describe(getApplicationContext(),path,predir,inputPath);
+
+               // local_describe(getApplicationContext(),path,predir,inputPath);
+                try {
+                    starttime = System.currentTimeMillis();
+                    remote_describe(getApplicationContext(), path, predir, inputPath);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
                 //pre_comp_op=output;
                 //System.out.println("RECIEVED FROM DESCRIBER:"+);
                 /**
@@ -208,7 +237,13 @@ public class Description extends AppCompatActivity {
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            local_describe(getApplicationContext(),this.audioOp,predir,inputPath);
+            try {
+                remote_describe(getApplicationContext(), this.audioOp, predir, inputPath);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            //local_describe(getApplicationContext(),this.audioOp,predir,inputPath);
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -295,7 +330,111 @@ public class Description extends AppCompatActivity {
             System.out.println("\n---------\nISSUE\n");
             // Handle if FFmpeg is not supported by device
         }
-        System.out.println("DESCRIBER IS SENDIG BACK:"+output);
+        System.out.println("DESCRIBER IS SENDING BACK:"+output);
         return output;
     }
+
+    public static void remote_describe(Context context, String audioPath, String predir, String selectedFilePath) throws FileNotFoundException {
+        String postUrl = "http://3.22.70.87:8080/addDescription";
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        ContentResolver contentResolver = context.getContentResolver();
+        final String contentType = "video/mp4";
+        final AssetFileDescriptor fd;
+        fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
+        System.out.println(selectedFilePath);
+        File audiofile = new File(audioPath);
+
+        RequestBody videoFile = new RequestBody() {
+            @Override
+            public long contentLength() {
+                return fd.getDeclaredLength();
+            }
+
+            @Override
+            public MediaType contentType() {
+                return MediaType.parse(contentType);
+            }
+
+            @Override
+            public void writeTo(BufferedSink sink) throws IOException {
+                try (InputStream is = fd.createInputStream()) {
+                    sink.writeAll(Okio.buffer(Okio.source(is)));
+                }
+            }
+        };
+
+
+        RequestBody postBodyImage = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("uploadedVideo", selectedFilePath.substring((selectedFilePath.lastIndexOf('/') + 1)), videoFile)
+                .addFormDataPart("audioFile", audioPath.substring((audioPath.lastIndexOf('/')+1)), RequestBody.create(MediaType.parse("audio/mp3"), audiofile))
+                .build();
+
+        System.out.println("Please Wait");
+
+        postRequest(postUrl, postBodyImage);
+    }
+
+    static void postRequest(String postUrl, RequestBody postBody) {
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        builder.connectTimeout(10, TimeUnit.MINUTES);
+        builder.readTimeout(10, TimeUnit.MINUTES);
+        builder.writeTimeout(10, TimeUnit.MINUTES);
+
+        OkHttpClient client = builder.build();
+
+        Request request = new Request.Builder()
+                .url(postUrl)
+                .post(postBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Cancel the post on failure.
+                call.cancel();
+
+                // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
+                System.out.println("Failed to Connect to Server");
+            }
+
+            @Override
+            public void onResponse (Call call, Response response) throws IOException {
+                // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
+
+                System.out.println("Running!");
+                System.out.println("\nADDING DESCRIPTION\n");
+
+                try {
+                    String app_dir = "accessibility";
+                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, "described_video.mp4");
+                    if (!file.getParentFile().exists()) {
+                        file.getParentFile().mkdirs();
+                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                    }
+
+                    System.out.println("Writing file");
+                    BufferedSink data = Okio.buffer(Okio.sink(file));
+                    data.writeAll(response.body().source());
+                    data.close();
+
+                    System.out.println("Done writing video file.");
+                    endtime = System.currentTimeMillis();
+                    System.out.println("Described Video!");
+
+                    System.out.println("Overlaying audio took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+    }
+
+
 }
