@@ -9,4 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="main">#1D3C45</color>
     <color name="second">#FFF1E1</color>
+    <color name="color_primary">@color/main</color>
+    <color name="color_secondary">@color/main</color>
+    <color name="color_accent">@color/main</color>
 </resources>

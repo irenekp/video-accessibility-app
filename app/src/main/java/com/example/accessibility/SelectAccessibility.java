@@ -19,7 +19,6 @@ public class SelectAccessibility extends AppCompatActivity {
         description=findViewById(R.id.audio_desc);
         Intent intent = getIntent();
         inputPath=intent.getStringExtra("path");
-        System.out.println("THE SELECTED VIDEO PATH IS:"+inputPath);
         subtitles.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

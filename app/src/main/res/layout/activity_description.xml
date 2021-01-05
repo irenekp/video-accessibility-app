@@ -34,23 +34,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <VideoView
-        android:id="@+id/desc_video"
-        android:layout_width="296dp"
-        android:layout_height="250dp"
-        android:layout_marginStart="56dp"
-        android:layout_marginTop="328dp"
-        android:visibility="gone"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="404dp"
+        android:layout_marginTop="207dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <VideoView
+            android:id="@+id/desc_video"
+            android:layout_width="296dp"
+            android:layout_height="250dp"
+            android:layout_marginStart="56dp"
+            android:layout_marginTop="328dp"
+            android:visibility="gone"
+            android:layout_gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/description_updates"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="252dp"
+        android:layout_marginTop="156dp"
         android:text="updates"
+        android:gravity="center"
         android:textAlignment="center"
         android:textColor="@color/main"
         android:textStyle="bold"
