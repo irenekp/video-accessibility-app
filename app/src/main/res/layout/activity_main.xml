@@ -14,9 +14,13 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="44dp"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="140dp"
         android:background="@drawable/bg_info"
         android:elevation="4dp"
+        android:text="\n\n\nThe power of the Web is in its universality.\nAccess by everyone regardless of\ndisability is an essential aspect.\n\n-Tim Berners-Lee, inventor of the WWW."
+        android:textAlignment="center"
+        android:textColor="@color/main"
+        android:textStyle="italic"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -27,11 +31,54 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="120dp"
-        android:layout_marginTop="584dp"
+        android:layout_marginTop="664dp"
         android:background="@drawable/button"
         android:elevation="4dp"
         android:fontFamily="sans-serif-light"
         android:text="Upload Video"
+        android:textColor="@color/main"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="78dp"
+        android:layout_height="113dp"
+        android:layout_marginStart="164dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/accessibility" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="175dp"
+        android:layout_height="235dp"
+        android:layout_marginStart="49dp"
+        android:layout_marginTop="272dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/eye" />
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="160dp"
+        android:layout_height="251dp"
+        android:layout_marginStart="190dp"
+        android:layout_marginTop="260dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ear" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="274dp"
+        android:layout_height="111dp"
+        android:layout_marginStart="72dp"
+        android:layout_marginTop="480dp"
+        android:text="Every minute, 500 hours of footage is uploaded onto youtube.\n\n\nHelp your video content be indiscriminately accessible to the world."
+        android:textAlignment="center"
         android:textColor="@color/main"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"

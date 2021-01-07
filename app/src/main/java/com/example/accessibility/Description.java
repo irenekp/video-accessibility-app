@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
@@ -60,38 +62,37 @@ import static android.view.View.VISIBLE;
 public class Description extends AppCompatActivity {
     private static int RECORD = 1, FILES = 0;
     public static MediaRecorder myAudioRecorder;
-    //TextView desc_updates;
     String predir = Environment.getExternalStorageDirectory() + "/accessibility";
     String inputPath;
-   // ImageView loading;
-    VideoView video;
-    AppCompatButton compress;
-    //String pre_comp_op;
+    static AppCompatButton compress;
+    static TextView descstatus;
+    static VideoView descvideo;
+    static ImageView loadinggif;
     static String output;
     public static long duration;
-
     static long endtime = 0, starttime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_description);
-        //desc_updates = findViewById(R.id.description_updates);
-        //loading = findViewById(R.id.audio_rec);
-        video = findViewById(R.id.desc_video);
         AppCompatButton desc = findViewById(R.id.start_desc);
         inputPath = getIntent().getStringExtra("path");
         compress = findViewById(R.id.compress_desc);
+        descstatus=findViewById(R.id.descstatus);
+        descvideo=findViewById(R.id.descvideo);
+        loadinggif=findViewById(R.id.loadinggif);
         compress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //loading.setVisibility(View.VISIBLE);
                 try {
-                    Compression.remote_compress(getApplicationContext(), predir, output);
-                    //System.out.println("RECIVED COMPRESSED:" + compOp);
-          //          desc_updates.setText("Video Compressed");
-                    //loading.setVisibility(View.INVISIBLE);
+                    descstatus.setText("Compressing...");
+                    GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(loadinggif);
+                    Glide.with(getApplicationContext()).load(R.drawable.loading).into(imageViewTarget);
+                    //Compression.remote_compress(getApplicationContext(), predir, output,1);
+                    Compression.local_compress(getApplicationContext(), predir, output,1);
                 }catch (Exception e){
+                    errorUi(getApplicationContext());
                     System.out.println("File Not Found");
                     e.printStackTrace();
                 }
@@ -103,6 +104,17 @@ public class Description extends AppCompatActivity {
                 pickSrc();
             }
         });
+    }
+    public static void completedUi(Context context, String op){
+        compress.setEnabled(true);
+        descstatus.setText("Video Saved at:"+op);
+        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(loadinggif);
+        Glide.with(context).load(R.drawable.completed).into(imageViewTarget);
+    }
+    public static void errorUi(Context context){
+        descstatus.setText("An Error Has Occured");
+        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(loadinggif);
+        Glide.with(context).load(R.drawable.error).into(imageViewTarget);
     }
 
     public void pickSrc() {
@@ -137,19 +149,27 @@ public class Description extends AppCompatActivity {
                                 myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                                 myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
                                 myAudioRecorder.setOutputFile(audioOp);
-                                //video.setVideoPath(inputPath);
-                                //video.start();
-                                //Glide.with(getApplicationContext()).load(R.drawable.audio).asGif().into(loading);
-                                //video.setVisibility(VISIBLE);
-                                //loading.setVisibility(VISIBLE);
                                 try {
+                                        descstatus.setText("Recording...");
+                                        loadinggif.setEnabled(true);
+                                        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(loadinggif);
+                                        Glide.with(getApplicationContext()).load(R.drawable.audio).into(imageViewTarget);
+                                        descvideo.setVideoPath(inputPath);
+                                        descvideo.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                            @Override
+                                            public void onPrepared(MediaPlayer mp) {
+                                                mp.setVolume(0f, 0f);
+                                                mp.setLooping(true);
+                                            }
+                                        });
+                                        descvideo.start();
                                     myAudioRecorder.prepare();
                                     myAudioRecorder.start();
-            //                        desc_updates.setText("Recording");
                                     Auto_Stop_Task as = new Auto_Stop_Task(audioOp);
                                     as.execute();
                                 } catch (Exception e) {
                                     e.printStackTrace();
+                                    errorUi(getApplicationContext());
                                 }
                             default:
                                 break;
@@ -165,6 +185,7 @@ public class Description extends AppCompatActivity {
         if (resultCode == this.RESULT_CANCELED) {
             Toast.makeText(getApplicationContext(),"Audio Not Picked", Toast.LENGTH_SHORT);
             System.out.println("Choosing source failed after picking source");
+            errorUi(getApplicationContext());
             return;
         }
         if (requestCode == FILES) {
@@ -176,31 +197,16 @@ public class Description extends AppCompatActivity {
                 // Get
                 String path = PathExtracter.getPath(getApplicationContext(),uri);
                 Log.d("d", "File Path: " + path);
-                //SrtStatus.setText(path);
-                //desc_updates.setText("Audio Src:"+path);
-                // Get the file instance
-                // File file = new File(path);
-                // Initiate the upload
 
-               // local_describe(getApplicationContext(),path,predir,inputPath);
+               local_describe(getApplicationContext(),path,predir,inputPath);
                 try {
                     starttime = System.currentTimeMillis();
-                    remote_describe(getApplicationContext(), path, predir, inputPath);
-                } catch (FileNotFoundException e) {
+                    //remote_describe(getApplicationContext(), path, predir, inputPath);
+                } catch (Exception e) {
                     e.printStackTrace();
+                    errorUi(getApplicationContext());
                 }
 
-                //pre_comp_op=output;
-                //System.out.println("RECIEVED FROM DESCRIBER:"+);
-                /**
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        desc_updates.setText("Described File is Generated at:"+output);
-                        loading.setVisibility(View.INVISIBLE);
-                    }
-                });
-                 **/
             }
         }
         return;
@@ -214,22 +220,23 @@ public class Description extends AppCompatActivity {
         }
         @Override
         protected Integer doInBackground(Void... arg0) {
-
             try {
                 Thread.sleep(Description.duration);
                 Description.myAudioRecorder.stop();
                 Description.myAudioRecorder.reset();
+                System.out.println("Done Recording");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        //desc_updates.setText("Stopped");
-                  //      desc_updates.setText("Audio File at:"+audioOp);
+                        descvideo.stopPlayback();
+                        descstatus.setText("Audio Saved at: "+audioOp);
                     }
                 });
-                System.out.println("Done Recording");
+
                 //flag=1;
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                errorUi(getApplicationContext());
             }
             return 0;
         }
@@ -238,25 +245,25 @@ public class Description extends AppCompatActivity {
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
             try {
-                remote_describe(getApplicationContext(), this.audioOp, predir, inputPath);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            //local_describe(getApplicationContext(),this.audioOp,predir,inputPath);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        descstatus.setText("Generating Video");
+                        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(loadinggif);
+                        Glide.with(getApplicationContext()).load(R.drawable.loading).into(imageViewTarget);
+                    }
+                });
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                   // desc_updates.setText("Described File is Generated at:"+output);
-                }
-            });
-            //finishedRecording(audioOp);
+                local_describe(getApplicationContext(),this.audioOp,predir,inputPath);
+                //remote_describe(getApplicationContext(), this.audioOp, predir, inputPath);
+            } catch (Exception e) {
+                e.printStackTrace();
+                errorUi(getApplicationContext());
+            }
+
         }
     }
     public static String local_describe(Context context, String audioPath, String predir, String inputPath) {
-        //desc_updates.setText("Creating New File");
-        //video.stopPlayback();
-        //Glide.with(this).load(R.drawable.loading).asGif().into(loading);
         FFmpeg ffmpeg2 = FFmpeg.getInstance(context);
         try {
             ffmpeg2.loadBinary(new LoadBinaryResponseHandler() {
@@ -268,6 +275,7 @@ public class Description extends AppCompatActivity {
                 @Override
                 public void onFailure() {
                     Toast.makeText(context, "onFailure", Toast.LENGTH_SHORT);
+                    errorUi(context);
                 }
 
                 @Override
@@ -300,6 +308,7 @@ public class Description extends AppCompatActivity {
                             @Override
                             public void onFailure(String message) {
                                 System.out.println("\n---------COMMAND\nFAILURE\n" + message);
+                                errorUi(context);
                             }
 
                             @Override
@@ -311,17 +320,13 @@ public class Description extends AppCompatActivity {
                             public void onFinish() {
                                 System.out.println("\n---------COMMAND\nFINISH\n");
                                 System.out.println("Path Is:" + output);
-                                //done[0]=true;
-                                //desc_updates.setText("Video Created");
-                                //loading.setVisibility(View.INVISIBLE);
-                                //pre_comp_op = output;
-                                //video.setVideoPath(output);
-                                //video.start();
+                                completedUi(context,output);
                             }
                         });
                     } catch (FFmpegCommandAlreadyRunningException e) {
                         // Handle if FFmpeg is already running
                         e.printStackTrace();
+                        errorUi(context);
                     }
                 }
             });
@@ -329,6 +334,7 @@ public class Description extends AppCompatActivity {
             Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
             System.out.println("\n---------\nISSUE\n");
             // Handle if FFmpeg is not supported by device
+            errorUi(context);
         }
         System.out.println("DESCRIBER IS SENDING BACK:"+output);
         return output;
@@ -336,7 +342,6 @@ public class Description extends AppCompatActivity {
 
     public static void remote_describe(Context context, String audioPath, String predir, String selectedFilePath) throws FileNotFoundException {
         String postUrl = "http://3.22.70.87:8080/addDescription";
-
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         ContentResolver contentResolver = context.getContentResolver();
@@ -374,13 +379,12 @@ public class Description extends AppCompatActivity {
 
         System.out.println("Please Wait");
 
-        postRequest(postUrl, postBodyImage);
+        postRequest(context,postUrl, postBodyImage);
     }
 
-    static void postRequest(String postUrl, RequestBody postBody) {
+    static void postRequest(Context context, String postUrl, RequestBody postBody) {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
         builder.connectTimeout(10, TimeUnit.MINUTES);
         builder.readTimeout(10, TimeUnit.MINUTES);
         builder.writeTimeout(10, TimeUnit.MINUTES);
@@ -397,7 +401,7 @@ public class Description extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 // Cancel the post on failure.
                 call.cancel();
-
+                errorUi(context);
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
                 System.out.println("Failed to Connect to Server");
             }
@@ -411,30 +415,27 @@ public class Description extends AppCompatActivity {
 
                 try {
                     String app_dir = "accessibility";
-                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, "described_video.mp4");
+                    Timestamp ts=new Timestamp(System.currentTimeMillis());
+                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
                         System.out.println("we made accessibility!" + file.getAbsolutePath());
                     }
-
                     System.out.println("Writing file");
                     BufferedSink data = Okio.buffer(Okio.sink(file));
                     data.writeAll(response.body().source());
                     data.close();
-
                     System.out.println("Done writing video file.");
                     endtime = System.currentTimeMillis();
                     System.out.println("Described Video!");
-
                     System.out.println("Overlaying audio took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
-
+                    String op=Environment.getExternalStorageDirectory() + "/" + app_dir+"/"+ts.toString()+".mp4";
+                    completedUi(context,op);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    errorUi(context);
                 }
             }
-
         });
     }
-
-
 }

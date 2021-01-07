@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
 
@@ -37,7 +38,7 @@ import okio.Okio;
 
 public class Compression {
     static Long starttime;
-    public static String local_compress(Context context, String predir, String pre_comp_op) {
+    public static String local_compress(Context context, String predir, String pre_comp_op, int caller) {
         //loading.setVisibility(View.VISIBLE);
         final String[] output = new String[1];
         FFmpeg ffmpeg3 = FFmpeg.getInstance(context);
@@ -94,19 +95,30 @@ public class Compression {
                             public void onFinish() {
                                 System.out.println("\n---------COMMAND\nFINISH\n");
                                 System.out.println("Path Is:" + output[0]);
-                                //desc_updates.setText("Video Compressed");
-                                //loading.setVisibility(View.INVISIBLE);
-                                //video.setVideoPath(output);
-                                //video.start();
+                                if(caller==0){
+                                    Subtitles.updateUi(context,output[0]);
+                                }else{
+                                    Description.completedUi(context,output[0]);
+                                }
                             }
                         });
                     } catch (FFmpegCommandAlreadyRunningException e) {
                         // Handle if FFmpeg is already running
+                        if(caller==0){
+                            Subtitles.errorUi(context);
+                        }else{
+                            Description.errorUi(context);
+                        }
                         e.printStackTrace();
                     }
                 }
             });
         } catch (FFmpegNotSupportedException e) {
+            if(caller==0){
+                Subtitles.errorUi(context);
+            }else{
+                Description.errorUi(context);
+            }
             Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
             System.out.println("\n---------\nISSUE\n");
             // Handle if FFmpeg is not supported by device
@@ -114,7 +126,7 @@ public class Compression {
         return output[0];
     }
 
-    public static void remote_compress(Context context, String predir, String selectedFilePath) throws FileNotFoundException {
+    public static void remote_compress(Context context, String predir, String selectedFilePath, int caller) throws FileNotFoundException {
         String postUrl = "http://3.22.70.87:8080/compressVideo";
         starttime=System.currentTimeMillis();
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -151,10 +163,10 @@ public class Compression {
 
         System.out.println("Please Wait");
 
-        postRequest(postUrl, postBodyImage);
+        postRequest(context,postUrl, postBodyImage, caller);
     }
 
-    static void postRequest(String postUrl, RequestBody postBody) {
+    static void postRequest(Context context, String postUrl, RequestBody postBody, int caller) {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.connectTimeout(10, TimeUnit.MINUTES);
@@ -173,7 +185,11 @@ public class Compression {
             public void onFailure(Call call, IOException e) {
                 // Cancel the post on failure.
                 call.cancel();
-
+                if(caller==0){
+                    Subtitles.errorUi(context);
+                }else{
+                    Description.errorUi(context);
+                }
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
                 System.out.println("Failed to Connect to Server");
             }
@@ -184,9 +200,12 @@ public class Compression {
 
                 System.out.println("Running!");
                 System.out.println("\nCOMPRESSING\n");
+                String op;
                 try {
                     String app_dir = "accessibility";
-                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, "compressed_video.mp4");
+                    Timestamp ts=new Timestamp(System.currentTimeMillis());
+                    op=Environment.getExternalStorageDirectory() + "/" + app_dir+"/"+ts.toString()+".mp4";
+                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
                         System.out.println("we made accessibility!" + file.getAbsolutePath());
@@ -200,12 +219,21 @@ public class Compression {
                     endtime = System.currentTimeMillis();
                     System.out.println("Compressed Video!");
                     System.out.println("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
-
+                    if(caller==0){
+                        Subtitles.updateUi(context,op);
+                    }
+                    else {
+                        Description.completedUi(context,op);
+                    }
                 } catch (IOException e) {
+                    if(caller==0){
+                        Subtitles.errorUi(context);
+                    }else{
+                        Description.errorUi(context);
+                    }
                     e.printStackTrace();
                 }
             }
-
         });
     }
 }

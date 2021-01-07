@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -15,11 +16,15 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileUtils;
 import android.provider.MediaStore;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
@@ -46,16 +51,16 @@ import okio.BufferedSink;
 import okio.Okio;
 
 public class Subtitles extends AppCompatActivity {
-    //TextView SrtStatus;
     AppCompatButton Start;
     String predir;
     String inputPath;
     String subtitlePath;
     static String output;
-
     static long starttime = 0;
     static long endtime=0;
-
+    static TextView subsstatus;
+    static ImageView subsimage;
+    static AppCompatButton Compress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,10 +72,12 @@ public class Subtitles extends AppCompatActivity {
             System.out.println("we made accessibility!"+appDir.getAbsolutePath());
         }
         inputPath=getIntent().getStringExtra("path");
-        //SrtStatus=findViewById(R.id.srt_status);
+        Compress=findViewById(R.id.sub_compress);
         AppCompatButton local=findViewById(R.id.local);
         Start=findViewById(R.id.start_subtitle);
         Start.setEnabled(false);
+        subsstatus=findViewById(R.id.subsstatus);
+        subsimage=findViewById(R.id.subsimage);
         local.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,31 +87,37 @@ public class Subtitles extends AppCompatActivity {
         Start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                subsstatus.setText("Please Wait, Subtitling...");
+                GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(subsimage);
+                Glide.with(getApplicationContext()).load(R.drawable.loading).into(imageViewTarget);
                 starttime = System.currentTimeMillis();
-                //String output=local_Subtitler(getApplicationContext(),predir,inputPath,subtitlePath);
-
+                String[]x={inputPath,subtitlePath};
+                if(DecisionEngine.decision_engine(0,x)) {
+                    output = local_Subtitler(getApplicationContext(), predir, inputPath, subtitlePath);
+                }else{
                 try {
-                    remote_subtitler(getApplicationContext(), predir, inputPath, subtitlePath);
-                } catch (FileNotFoundException e) {
+                    //remote_subtitler(getApplicationContext(), predir, inputPath, subtitlePath);
+                } catch (Exception e) {
+                    errorUi(getApplicationContext());
                     e.printStackTrace();
                 }
-
+                }
+                Compress.setEnabled(true);
             }
         });
-        AppCompatButton Compress=findViewById(R.id.sub_compress);
+
         Compress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //SrtStatus.setText("Compressing.");
-                    }
-                });
+                subsstatus.setText("Please Wait, Compressing...");
+                GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(subsimage);
+                Glide.with(getApplicationContext()).load(R.drawable.loading).into(imageViewTarget);
+                String comOp=Compression.local_compress(getApplicationContext(),predir,inputPath,0);
                 try {
-                    Compression.remote_compress(getApplicationContext(), predir, inputPath);
+                   // Compression.remote_compress(getApplicationContext(), predir, inputPath,0);
                 }catch (Exception e){
                     System.out.println("Compression File Not Found");
+                    errorUi(getApplicationContext());
                     e.printStackTrace();
                 }
             }
@@ -123,11 +136,16 @@ public class Subtitles extends AppCompatActivity {
                     FILE_SELECT_CODE);
         } catch (android.content.ActivityNotFoundException ex) {
             // Potentially direct the user to the Market with a Dialog
+            errorUi(getApplicationContext());
             Toast.makeText(this, "Please install a File Manager.",
                     Toast.LENGTH_SHORT).show();
         }
     }
-
+    public static void errorUi(Context context){
+        subsstatus.setText("An Error Has Occured");
+        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(subsimage);
+        Glide.with(context).load(R.drawable.error).into(imageViewTarget);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -139,7 +157,12 @@ public class Subtitles extends AppCompatActivity {
                     String path = PathExtracter.getPath(getApplicationContext(),uri);
                     Log.d("d", "File Path: " + path);
                     subtitlePath=path;
-                    //SrtStatus.setText("Subtitles At Path:"+path);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            subsstatus.setText("SRT location: "+path);
+                        }
+                    });
                     Start.setEnabled(true);
                 }
                 break;
@@ -158,6 +181,7 @@ public class Subtitles extends AppCompatActivity {
                 @Override
                 public void onFailure() {
                     Toast.makeText(context, "onFailure", Toast.LENGTH_SHORT);
+                    errorUi(context);
                 }
 
                 @Override
@@ -180,6 +204,7 @@ public class Subtitles extends AppCompatActivity {
                             @Override
                             public void onFailure() {
                                 Toast.makeText(context, "onFailure", Toast.LENGTH_SHORT);
+                                errorUi(context);
                             }
 
                             @Override
@@ -212,6 +237,7 @@ public class Subtitles extends AppCompatActivity {
                                         @Override
                                         public void onFailure(String message) {
                                             System.out.println("\n---------COMMAND\nFAILURE\n" + message);
+                                            errorUi(context);
                                         }
                                         @Override
                                         public void onSuccess(String message) {
@@ -222,15 +248,18 @@ public class Subtitles extends AppCompatActivity {
                                             System.out.println("\n---------COMMAND\nFINISH\n");
                                             System.out.println("Path Is:"+ output);
                                            // done[0]=true;
+                                            updateUi(context,output);
                                         }
                                     });
                                 } catch (FFmpegCommandAlreadyRunningException e) {
                                     // Handle if FFmpeg is already running
+                                    errorUi(context);
                                     e.printStackTrace();
                                 }
                             }
                         });
                     } catch (FFmpegNotSupportedException e) {
+                        errorUi(context);
                         Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
                         System.out.println("\n---------\nISSUE\n");
                         // Handle if FFmpeg is not supported by device
@@ -238,13 +267,18 @@ public class Subtitles extends AppCompatActivity {
                 }
             });
         } catch (FFmpegNotSupportedException e) {
+            errorUi(context);
             Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
             System.out.println("\n---------\nISSUE\n");
             // Handle if FFmpeg is not supported by device
         }
         return output;
     }
-
+    public static void updateUi(Context context, String op){
+        subsstatus.setText("Done! Output Video Path:"+op);
+        GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(subsimage);
+        Glide.with(context).load(R.drawable.completed).into(imageViewTarget);
+    }
     public static void remote_subtitler(Context context, String predir, String selectedFilePath, String subtitlePath) throws FileNotFoundException {
         String postUrl = "http://3.22.70.87:8080/addSubtitles";
 
@@ -272,6 +306,8 @@ public class Subtitles extends AppCompatActivity {
             public void writeTo(BufferedSink sink) throws IOException {
                 try (InputStream is = fd.createInputStream()) {
                     sink.writeAll(Okio.buffer(Okio.source(is)));
+                }catch (Exception e){
+                    errorUi(context);
                 }
             }
         };
@@ -285,30 +321,25 @@ public class Subtitles extends AppCompatActivity {
 
         System.out.println("Please Wait");
 
-        postRequest(postUrl, postBodyImage);
+        postRequest(context,postUrl, postBodyImage);
     }
 
-    static void postRequest(String postUrl, RequestBody postBody) {
-
+    static void postRequest(Context context, String postUrl, RequestBody postBody) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
         builder.connectTimeout(10, TimeUnit.MINUTES);
         builder.readTimeout(10, TimeUnit.MINUTES);
         builder.writeTimeout(10, TimeUnit.MINUTES);
-
         OkHttpClient client = builder.build();
-
         Request request = new Request.Builder()
                 .url(postUrl)
                 .post(postBody)
                 .build();
-
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 // Cancel the post on failure.
                 call.cancel();
-
+                errorUi(context);
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
                 System.out.println("Failed to Connect to Server");
             }
@@ -319,10 +350,12 @@ public class Subtitles extends AppCompatActivity {
 
                 System.out.println("Running!");
                 System.out.println("\nADDING SUBTITLES\n");
-
+                String op;
                 try {
                     String app_dir = "accessibility";
-                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, "subbed_video.mp4");
+                    Timestamp ts=new Timestamp(System.currentTimeMillis());
+                    op=Environment.getExternalStorageDirectory() + "/" + app_dir+"/"+ts.toString()+".mp4";
+                    File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
                         System.out.println("we made accessibility!" + file.getAbsolutePath());
@@ -338,8 +371,9 @@ public class Subtitles extends AppCompatActivity {
                     System.out.println("Subtitled Video!");
 
                     System.out.println("Subbing took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
-
+                    updateUi(context,op);
                 } catch (IOException e) {
+                    errorUi(context);
                     e.printStackTrace();
                 }
             }
