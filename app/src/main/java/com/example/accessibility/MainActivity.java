@@ -14,31 +14,47 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import java.io.File;
+import java.text.ParseException;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+    public class MainActivity extends AppCompatActivity {
     AppCompatButton upload;
     private int GALLERY = 1, CAMERA = 2;
+    int priority = 1;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         File appDir = new File(Environment.getExternalStorageDirectory() + "/"+"accessibility");
         if (!appDir.exists()) {
             appDir.mkdirs();
             System.out.println("we made accessibility!"+appDir.getAbsolutePath());
         }
+
+        //checking priority mode
+
+
         upload=findViewById(R.id.upload_video);
         upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Switch prioritySwitch = findViewById(R.id.priority);
+                if(!prioritySwitch.isChecked()){priority = 1;}
+                else{priority=2;}
                 Source();
             }
         });
 
     }
+
     private void Source() {
         AlertDialog.Builder source = new AlertDialog.Builder(this);
         source.setTitle("Pick Source For Video");
@@ -65,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         source.show();
     }
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         String inputPath=null;
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == this.RESULT_CANCELED) {
@@ -84,12 +101,15 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this,"No Gallery File Chosen", Toast.LENGTH_SHORT);
             }
         } else if (requestCode == CAMERA) {
+
             Uri contentURI = data.getData();
             String recordedVideoPath = PathExtracter.galleryPath(getApplicationContext(),contentURI);
             inputPath=recordedVideoPath;
             System.out.println("RECORDED VIDEO PATH\n\n\n\n" + recordedVideoPath);
+
         }
         Intent selectAccessibility =new Intent(this, SelectAccessibility.class);
+        selectAccessibility.putExtra("priority", Integer.toString(priority));
         selectAccessibility.putExtra("path",inputPath);
         startActivity(selectAccessibility);
         return;

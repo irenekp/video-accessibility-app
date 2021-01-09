@@ -83,4 +83,40 @@
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Switch
+        android:id="@+id/priority"
+        android:theme="@style/SwitchTheme"
+        android:layout_width="54dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="324dp"
+        android:layout_marginTop="16dp"
+        android:checked="false"
+        android:foregroundTint="#FFFFFF"
+        android:shadowColor="#FFFFFF"
+        android:textColor="#FFFFFF"
+        android:textColorLink="#A6A4A4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:checked="true" />
+
+    <ImageView
+        android:id="@+id/imageView7"
+        android:layout_width="28dp"
+        android:layout_height="26dp"
+        android:layout_marginStart="304dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ticktock" />
+
+    <ImageView
+        android:id="@+id/imageView8"
+        android:layout_width="29dp"
+        android:layout_height="29dp"
+        android:layout_marginStart="378dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/battery" />
 </androidx.constraintlayout.widget.ConstraintLayout>

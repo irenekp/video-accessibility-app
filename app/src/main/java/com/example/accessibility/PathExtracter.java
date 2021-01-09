@@ -21,6 +21,18 @@ public class PathExtracter {
         } else
             return null;
     }
+
+    public static String audioPath(Context context, Uri resource) {
+        String[] mediaStore = {MediaStore.Audio.Media.DATA};
+        Cursor cursor = context.getContentResolver().query(resource, mediaStore, null, null, null);
+        if (cursor != null) {
+            int clm_idx = cursor
+                    .getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(clm_idx);
+        } else
+            return null;
+    }
     // Implementation of the getPath() method and all its requirements is taken from the StackOverflow Paul Burke's answer: https://stackoverflow.com/a/20559175/5426539
     public static String getPath(final Context context, final Uri uri) {
 
@@ -74,10 +86,12 @@ public class PathExtracter {
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            System.out.println("CONTENT");
             return getDataColumn(context, uri, null, null);
         }
         // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            System.out.println("FILE");
             return uri.getPath();
         }
 

@@ -8,8 +8,12 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.view.View;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
@@ -23,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -35,7 +41,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
-
+/**
 public class Compression {
     static Long starttime;
     public static String local_compress(Context context, String predir, String pre_comp_op, int caller) {
@@ -98,7 +104,7 @@ public class Compression {
                                 if(caller==0){
                                     Subtitles.updateUi(context,output[0]);
                                 }else{
-                                    Description.completedUi(context,output[0]);
+                                    Description.updateUi(context,output[0]);
                                 }
                             }
                         });
@@ -220,11 +226,12 @@ public class Compression {
                     System.out.println("Compressed Video!");
                     System.out.println("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
                     if(caller==0){
-                        Subtitles.updateUi(context,op);
+                        Subtitles.updateUiOKHTTP(context,op);
                     }
                     else {
-                        Description.completedUi(context,op);
+                        Description.updateUiOKHTTP(context,op);
                     }
+
                 } catch (IOException e) {
                     if(caller==0){
                         Subtitles.errorUi(context);
@@ -236,4 +243,46 @@ public class Compression {
             }
         });
     }
+
+
+    public static boolean Decision_Compression(Context context, String inputPath, int priority){
+        long duration = DecisionEngine.getVideoLength(context, inputPath);
+        System.out.println("\n\nDURATION OF INPUT VIDEO: " + duration);
+        System.out.println("USER PRIORITY IS " + priority);
+
+        //getting average for local
+        List<String[]> videos_local = DecisionEngine.getNearestFromCSV(context, 1, duration, 1);
+        float local_average = 0;
+        try {
+            local_average = DecisionEngine.averageOut(videos_local, priority);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        //getting average for remote
+        List<String[]> videos_remote = DecisionEngine.getNearestFromCSV(context, 1, duration, 2);
+        float remote_average = 0;
+        try {
+            remote_average = DecisionEngine.averageOut(videos_remote, priority);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        System.out.println("\nREMOTE AVERAGE: " + remote_average);
+        System.out.println("\nLOCAL AVERAGE: " + local_average);
+
+        //making offloading decision
+        if(remote_average<local_average){
+            System.out.println("\n\nOFFLOADING TASK");
+            return true;
+        }
+
+        else{
+            System.out.println("\n\nPERFORMING TASK LOCALLY");
+            return false;
+        }
+
+    }
+
 }
+
+ **/
