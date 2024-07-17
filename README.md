@@ -22,6 +22,8 @@ It also provides options to compress the video to enable sharing over platforms,
 
 ### Performance
 Video processing functions like visual description, subtitling and compression are very time consuming processes and mobile phones are resource-limit devices. Our app offers the ability to dynamically, based on context, decide whether a task is better off offloaded into a remote server. Below are the performance metrics on the time and power consumption for the video processing activites covered in the app when done locally on the device vs remotely on a server.
+
+
 <img width="672" alt="Screenshot 2024-07-17 at 10 48 15 PM" src="https://github.com/user-attachments/assets/3a62641a-e8e5-4b1e-bd47-37e62327703c">
 <img width="673" alt="Screenshot 2024-07-17 at 10 47 49 PM" src="https://github.com/user-attachments/assets/143be31e-c4fb-4b06-8b2e-81f26227ec11">
 <img width="662" alt="Screenshot 2024-07-17 at 10 47 14 PM" src="https://github.com/user-attachments/assets/f07aba50-fb21-4c40-8cf3-8c4069887407">
