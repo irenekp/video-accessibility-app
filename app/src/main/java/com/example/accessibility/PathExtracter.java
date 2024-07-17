@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 
 public class PathExtracter {
     public static String galleryPath(Context context, Uri resource) {
@@ -86,12 +87,12 @@ public class PathExtracter {
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
-            System.out.println("CONTENT");
+            Log.d("CONTENT");
             return getDataColumn(context, uri, null, null);
         }
         // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            System.out.println("FILE");
+            Log.d("FILE");
             return uri.getPath();
         }
 

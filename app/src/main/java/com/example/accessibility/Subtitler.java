@@ -2,7 +2,7 @@ package com.example.accessibility;
 
 import android.content.Context;
 import android.widget.Toast;
-
+import android.util.Log;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
@@ -38,7 +38,7 @@ public class Subtitler {
                 @Override
                 public void onFinish() {
                     Toast.makeText(context, "onFinish", Toast.LENGTH_SHORT);
-                    System.out.println("\n---------\nFINISH\n");
+                    Log.d("\n---------\nFINISH\n");
                     FFmpeg ffmpeg2 = FFmpeg.getInstance(context);
                     try {
                         ffmpeg2.loadBinary(new LoadBinaryResponseHandler() {
@@ -73,24 +73,20 @@ public class Subtitler {
                                     ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                                         @Override
                                         public void onStart() {
-                                            System.out.println("\n---------COMMAND\nSTART\n");
                                         }
                                         @Override
                                         public void onProgress(String message) {
-                                            System.out.println("Second Task: Progress"+message);
+                                            Log.d("Second Task: Progress"+message);
                                         }
                                         @Override
                                         public void onFailure(String message) {
-                                            System.out.println("\n---------COMMAND\nFAILURE\n" + message);
                                         }
                                         @Override
                                         public void onSuccess(String message) {
-                                            System.out.println("\n---------COMMAND\nSUCCESS\n");
                                         }
                                         @Override
                                         public void onFinish() {
-                                            System.out.println("\n---------COMMAND\nFINISH\n");
-                                            System.out.println("Path Is:"+ output[0]);
+                                            Log.d("Path Is:"+ output[0]);
                                             done[0]=true;
                                         }
                                     });
@@ -101,15 +97,13 @@ public class Subtitler {
                             }
                         });
                     } catch (FFmpegNotSupportedException e) {
-                        Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-                        System.out.println("\n---------\nISSUE\n");
+                        Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
                         // Handle if FFmpeg is not supported by device
                     }
                 }
             });
         } catch (FFmpegNotSupportedException e) {
             Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
             // Handle if FFmpeg is not supported by device
         }
         return returnforme(output[0]);

@@ -3,7 +3,7 @@ package com.example.accessibility;
 import android.content.Context;
 import android.view.View;
 import android.widget.Toast;
-
+import android.util.Log;
 import com.bumptech.glide.Glide;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
@@ -53,28 +53,28 @@ public class Describer {
                         ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                             @Override
                             public void onStart() {
-                                System.out.println("\n---------COMMAND\nSTART\n");
+                                Log.d("LOG: Start");
                             }
 
                             @Override
                             public void onProgress(String message) {
-                                System.out.println("Second Task: Progress" + message);
+                                Log.d("Second Task: Progress" + message);
                             }
 
                             @Override
                             public void onFailure(String message) {
-                                System.out.println("\n---------COMMAND\nFAILURE\n" + message);
+                                Log.d("LOG: Fail" + message);
                             }
 
                             @Override
                             public void onSuccess(String message) {
-                                System.out.println("\n---------COMMAND\nSUCCESS\n");
+                                Log.d("LOG: Success");
                             }
 
                             @Override
                             public void onFinish() {
-                                System.out.println("\n---------COMMAND\nFINISH\n");
-                                System.out.println("Path Is:" + output[0]);
+                                Log.d("LOG: Finish");
+                                Log.d("Path Is:" + output[0]);
                                 done[0]=true;
                                 //desc_updates.setText("Video Created");
                                 //loading.setVisibility(View.INVISIBLE);
@@ -90,11 +90,11 @@ public class Describer {
                 }
             });
         } catch (FFmpegNotSupportedException e) {
-            Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
+            Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
+            Log.d("LOG: ERR!");
             // Handle if FFmpeg is not supported by device
         }
-        System.out.println("DESCRIBER IS SENDIG BACK:"+output[0]);
+        Log.d("LOG: DESCRIBER O/P:"+output[0]);
         return returnforme(output[0]);
     }
     static String returnforme(String op){

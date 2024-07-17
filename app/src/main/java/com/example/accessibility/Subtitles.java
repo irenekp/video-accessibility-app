@@ -25,7 +25,7 @@ import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.util.Log;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
@@ -84,7 +84,7 @@ public class Subtitles extends AppCompatActivity {
         File appDir = new File(predir);
         if (!appDir.exists()) {
             appDir.mkdirs();
-            System.out.println("we made accessibility!"+appDir.getAbsolutePath());
+            Log.d("we made accessibility!"+appDir.getAbsolutePath());
         }
         inputPath=getIntent().getStringExtra("path");
         priority = Integer.parseInt(getIntent().getStringExtra("priority"));
@@ -152,7 +152,7 @@ public class Subtitles extends AppCompatActivity {
                        local_compress(getApplicationContext(), predir, output, 1);
                    }
                 }catch(Exception e){
-                    System.out.println("Compression File Not Found");
+                    Log.d("Compression File Not Found");
                     errorUi(getApplicationContext());
                     e.printStackTrace();
                 }
@@ -239,7 +239,6 @@ public class Subtitles extends AppCompatActivity {
                 @Override
                 public void onFinish() {
                     Toast.makeText(context, "onFinish", Toast.LENGTH_SHORT);
-                    System.out.println("\n---------\nFINISH\n");
                     FFmpeg ffmpeg2 = FFmpeg.getInstance(context);
                     try {
                         ffmpeg2.loadBinary(new LoadBinaryResponseHandler() {
@@ -275,25 +274,21 @@ public class Subtitles extends AppCompatActivity {
                                     ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                                         @Override
                                         public void onStart() {
-                                            System.out.println("\n---------COMMAND\nSTART\n");
                                         }
                                         @Override
                                         public void onProgress(String message) {
-                                            System.out.println("Second Task: Progress"+message);
+                                            Log.d("Second Task: Progress"+message);
                                         }
                                         @Override
                                         public void onFailure(String message) {
-                                            System.out.println("\n---------COMMAND\nFAILURE\n" + message);
                                             errorUi(context);
                                         }
                                         @Override
                                         public void onSuccess(String message) {
-                                            System.out.println("\n---------COMMAND\nSUCCESS\n");
                                         }
                                         @Override
                                         public void onFinish() {
-                                            System.out.println("\n---------COMMAND\nFINISH\n");
-                                            System.out.println("Path Is:"+ output);
+                                            Log.d("Path Is:"+ output);
                                            // done[0]=true;
                                             updateUi(context,output);
                                         }
@@ -307,8 +302,7 @@ public class Subtitles extends AppCompatActivity {
                         });
                     } catch (FFmpegNotSupportedException e) {
                         errorUi(context);
-                        Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-                        System.out.println("\n---------\nISSUE\n");
+                        Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
                         // Handle if FFmpeg is not supported by device
                     }
                 }
@@ -316,7 +310,6 @@ public class Subtitles extends AppCompatActivity {
         } catch (FFmpegNotSupportedException e) {
             errorUi(context);
             Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
             // Handle if FFmpeg is not supported by device
         }
         return output;
@@ -348,7 +341,7 @@ public class Subtitles extends AppCompatActivity {
         final String contentType = "video/mp4";
         final AssetFileDescriptor fd;
         fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
-        System.out.println(selectedFilePath);
+        Log.d(selectedFilePath);
         File subfile = new File(subtitlePath);
 
         RequestBody videoFile = new RequestBody() {
@@ -379,7 +372,7 @@ public class Subtitles extends AppCompatActivity {
                 .addFormDataPart("subtitleFile", subtitlePath.substring((subtitlePath.lastIndexOf('/')+1)), RequestBody.create(MediaType.parse("text/csv"), subfile))
                 .build();
 
-        System.out.println("Please Wait");
+        Log.d("Please Wait");
 
         postRequest(context,postUrl, postBodyImage);
     }
@@ -401,15 +394,15 @@ public class Subtitles extends AppCompatActivity {
                 call.cancel();
                 errorUiOKHTTP(context);
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
-                System.out.println("Failed to Connect to Server");
+                Log.d("Failed to Connect to Server");
             }
 
             @Override
             public void onResponse (Call call, Response response) throws IOException {
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
 
-                System.out.println("Running!");
-                System.out.println("\nADDING SUBTITLES\n");
+                Log.d("Running!");
+                Log.d("\nADDING SUBTITLES\n");
                 String op;
                 try {
                     String app_dir = "accessibility";
@@ -418,19 +411,19 @@ public class Subtitles extends AppCompatActivity {
                     File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
-                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                        Log.d("we made accessibility!" + file.getAbsolutePath());
                     }
 
-                    System.out.println("Writing file");
+                    Log.d("Writing file");
                     BufferedSink data = Okio.buffer(Okio.sink(file));
                     data.writeAll(response.body().source());
                     data.close();
 
-                    System.out.println("Done writing video file.");
+                    Log.d("Done writing video file.");
                     endtime = System.currentTimeMillis();
-                    System.out.println("Subtitled Video!");
+                    Log.d("Subtitled Video!");
 
-                    System.out.println("Subbing took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
+                    Log.d("Subbing took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
                     updateUiOKHTTP(context,op);
                 } catch (IOException e) {
                     errorUiOKHTTP(context);
@@ -443,8 +436,8 @@ public class Subtitles extends AppCompatActivity {
 
     public boolean Decision_Subtitles(String inputPath, int priority){
         long duration = DecisionEngine.getVideoLength(getApplicationContext(), inputPath);
-        System.out.println("\n\nDURATION OF INPUT VIDEO: " + duration);
-        System.out.println("USER PRIORITY IS " + priority);
+        Log.d("\n\nDURATION OF INPUT VIDEO: " + duration);
+        Log.d("USER PRIORITY IS " + priority);
 
         //getting average for local
         List<String[]> videos_local = DecisionEngine.getNearestFromCSV(getApplicationContext(), 3, duration, 1);
@@ -466,12 +459,12 @@ public class Subtitles extends AppCompatActivity {
 
         //making offloading decision
         if(remote_average<local_average){
-            System.out.println("\n\nOFFLOADING TASK");
+            Log.d("\n\nOFFLOADING TASK");
             return true;
         }
 
         else{
-            System.out.println("\n\nPERFORMING TASK LOCALLY");
+            Log.d("\n\nPERFORMING TASK LOCALLY");
             return false;
         }
 
@@ -503,7 +496,7 @@ public class Subtitles extends AppCompatActivity {
         final String contentType = "video/mp4";
         final AssetFileDescriptor fd;
         fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
-        System.out.println(selectedFilePath);
+        Log.d(selectedFilePath);
 
         RequestBody videoFile = new RequestBody() {
             @Override
@@ -532,7 +525,7 @@ public class Subtitles extends AppCompatActivity {
                 .addFormDataPart("uploadedVideo", selectedFilePath.substring((selectedFilePath.lastIndexOf('/') + 1)), videoFile)
                 .build();
 
-        System.out.println("Please Wait");
+        Log.d("Please Wait");
 
         postRequest2(context,postUrl, postBodyImage);
     }
@@ -556,15 +549,15 @@ public class Subtitles extends AppCompatActivity {
                 call.cancel();
                 errorUi(context);
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
-                System.out.println("Failed to Connect to Server");
+                Log.d("Failed to Connect to Server");
             }
 
             @Override
             public void onResponse (Call call, Response response) throws IOException {
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
 
-                System.out.println("Running!");
-                System.out.println("\nADDING SUBTITLES\n");
+                Log.d("Running!");
+                Log.d("\nADDING SUBTITLES\n");
                 String op;
                 try {
                     String app_dir = "accessibility";
@@ -573,18 +566,18 @@ public class Subtitles extends AppCompatActivity {
                     File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".srt");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
-                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                        Log.d("we made accessibility!" + file.getAbsolutePath());
                     }
-                    System.out.println("Writing file");
+                    Log.d("Writing file");
 
                     BufferedSink data = Okio.buffer(Okio.sink(file));
-                    System.out.println(response.body().source().toString());
+                    Log.d(response.body().source().toString());
                     data.writeAll(response.body().source());
                     data.close();
                     Long endtime;
 
 
-                    System.out.println("Done writing srt file.");
+                    Log.d("Done writing srt file.");
                     updateUiOKHTTP(context,op);
                 } catch (IOException e) {
                     errorUiOKHTTP(context);
@@ -632,28 +625,24 @@ public class Subtitles extends AppCompatActivity {
                         ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                             @Override
                             public void onStart() {
-                                System.out.println("\n---------COMMAND\nSTART\n");
                             }
 
                             @Override
                             public void onProgress(String message) {
-                                System.out.println("Second Task: Progress" + message);
+                                Log.d("Second Task: Progress" + message);
                             }
 
                             @Override
                             public void onFailure(String message) {
-                                System.out.println("\n---------COMMAND\nFAILURE\n" + message);
                             }
 
                             @Override
                             public void onSuccess(String message) {
-                                System.out.println("\n---------COMMAND\nSUCCESS\n");
                             }
 
                             @Override
                             public void onFinish() {
-                                System.out.println("\n---------COMMAND\nFINISH\n");
-                                System.out.println("Path Is:" + output[0]);
+                                Log.d("Path Is:" + output[0]);
                                 Subtitles.updateUi(context,output[0]);
 
                             }
@@ -675,8 +664,7 @@ public class Subtitles extends AppCompatActivity {
             }else{
                 Description.errorUi(context);
             }
-            Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
+            Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
             // Handle if FFmpeg is not supported by device
         }
         return output[0];
@@ -692,7 +680,7 @@ public class Subtitles extends AppCompatActivity {
         final String contentType = "video/mp4";
         final AssetFileDescriptor fd;
         fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
-        System.out.println(selectedFilePath);
+        Log.d(selectedFilePath);
 
         RequestBody videoFile = new RequestBody() {
             @Override
@@ -717,7 +705,7 @@ public class Subtitles extends AppCompatActivity {
                 .addFormDataPart("uploadedVideo", selectedFilePath.substring((selectedFilePath.lastIndexOf('/') + 1), selectedFilePath.length()), videoFile)
                 .build();
 
-        System.out.println("Please Wait");
+        Log.d("Please Wait");
 
         postRequest(context,postUrl, postBodyImage, caller);
     }
@@ -747,15 +735,15 @@ public class Subtitles extends AppCompatActivity {
                     Description.errorUiOKHTTP(context);
                 }
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
-                System.out.println("Failed to Connect to Server");
+                Log.d("Failed to Connect to Server");
             }
 
             @Override
             public void onResponse (Call call, Response response) throws IOException {
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
 
-                System.out.println("Running!");
-                System.out.println("\nCOMPRESSING\n");
+                Log.d("Running!");
+                Log.d("\nCOMPRESSING\n");
                 String op;
                 try {
                     String app_dir = "accessibility";
@@ -764,17 +752,17 @@ public class Subtitles extends AppCompatActivity {
                     File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
-                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                        Log.d("we made accessibility!" + file.getAbsolutePath());
                     }
-                    System.out.println("Writing file");
+                    Log.d("Writing file");
                     BufferedSink data = Okio.buffer(Okio.sink(file));
                     data.writeAll(response.body().source());
                     data.close();
                     Long endtime;
-                    System.out.println("Done writing video file.");
+                    Log.d("Done writing video file.");
                     endtime = System.currentTimeMillis();
-                    System.out.println("Compressed Video!");
-                    System.out.println("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
+                    Log.d("Compressed Video!");
+                    Log.d("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
                         updateUiOKHTTP(context,op);
 
                 } catch (IOException e) {
@@ -788,8 +776,8 @@ public class Subtitles extends AppCompatActivity {
 
     public static boolean Decision_Compression(Context context, String inputPath, int priority){
         long duration = DecisionEngine.getVideoLength(context, inputPath);
-        System.out.println("\n\nDURATION OF INPUT VIDEO: " + duration);
-        System.out.println("USER PRIORITY IS " + priority);
+        Log.d("\n\nDURATION OF INPUT VIDEO: " + duration);
+        Log.d("USER PRIORITY IS " + priority);
 
         //getting average for local
         List<String[]> videos_local = DecisionEngine.getNearestFromCSV(context, 1, duration, 1);
@@ -808,17 +796,17 @@ public class Subtitles extends AppCompatActivity {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        System.out.println("\nREMOTE AVERAGE: " + remote_average);
-        System.out.println("\nLOCAL AVERAGE: " + local_average);
+        Log.d("\nREMOTE AVERAGE: " + remote_average);
+        Log.d("\nLOCAL AVERAGE: " + local_average);
 
         //making offloading decision
         if(remote_average<local_average){
-            System.out.println("\n\nOFFLOADING TASK");
+            Log.d("\n\nOFFLOADING TASK");
             return true;
         }
 
         else{
-            System.out.println("\n\nPERFORMING TASK LOCALLY");
+            Log.d("\n\nPERFORMING TASK LOCALLY");
             return false;
         }
 

@@ -32,7 +32,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
-
+import android.util.Log;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
@@ -119,7 +119,7 @@ public class Description extends AppCompatActivity {
                     }
                 }catch (Exception e){
                     errorUi(getApplicationContext());
-                    System.out.println("File Not Found");
+                    Log.d("File Not Found");
                     e.printStackTrace();
                 }
             }
@@ -254,12 +254,12 @@ public class Description extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == this.RESULT_CANCELED) {
             Toast.makeText(getApplicationContext(),"Audio Not Picked", Toast.LENGTH_SHORT);
-            System.out.println("Choosing source failed after picking source");
+            Log.d("Choosing source failed after picking source");
             errorUi(getApplicationContext());
             return;
         }
         if (requestCode == FILES) {
-            System.out.println("Picked Files");
+            Log.d("Picked Files");
             if (resultCode == RESULT_OK && data.getData()!=null) {
                 Uri uri = data.getData();
                 Log.d("d", "File Uri: " + uri.toString());
@@ -300,7 +300,7 @@ public class Description extends AppCompatActivity {
                 Thread.sleep(Description.duration);
                 Description.myAudioRecorder.stop();
                 Description.myAudioRecorder.reset();
-                System.out.println("Done Recording");
+                Log.d("Done Recording");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -385,29 +385,24 @@ public class Description extends AppCompatActivity {
                         ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                             @Override
                             public void onStart() {
-                                System.out.println("\n---------COMMAND\nSTART\n");
                             }
 
                             @Override
                             public void onProgress(String message) {
-                                System.out.println("Second Task: Progress" + message);
                             }
 
                             @Override
                             public void onFailure(String message) {
-                                System.out.println("\n---------COMMAND\nFAILURE\n" + message);
                                 errorUi(context);
                             }
 
                             @Override
                             public void onSuccess(String message) {
-                                System.out.println("\n---------COMMAND\nSUCCESS\n");
                             }
 
                             @Override
                             public void onFinish() {
-                                System.out.println("\n---------COMMAND\nFINISH\n");
-                                System.out.println("Path Is:" + output);
+                                Log.d("Path Is:" + output);
                                 updateUi(context,output);
                             }
                         });
@@ -419,12 +414,10 @@ public class Description extends AppCompatActivity {
                 }
             });
         } catch (FFmpegNotSupportedException e) {
-            Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
+            Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
             // Handle if FFmpeg is not supported by device
             errorUi(context);
         }
-        System.out.println("DESCRIBER IS SENDING BACK:"+output);
         return output;
     }
 
@@ -437,7 +430,7 @@ public class Description extends AppCompatActivity {
         final String contentType = "video/mp4";
         final AssetFileDescriptor fd;
         fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
-        System.out.println(selectedFilePath);
+        Log.d(selectedFilePath);
         File audiofile = new File(audioPath);
 
         RequestBody videoFile = new RequestBody() {
@@ -466,7 +459,7 @@ public class Description extends AppCompatActivity {
                 .addFormDataPart("audioFile", audioPath.substring((audioPath.lastIndexOf('/')+1)), RequestBody.create(MediaType.parse("audio/mp3"), audiofile))
                 .build();
 
-        System.out.println("Please Wait");
+        Log.d("Please Wait");
 
         postRequest(context,postUrl, postBodyImage);
     }
@@ -492,15 +485,15 @@ public class Description extends AppCompatActivity {
                 call.cancel();
                 errorUi(context);
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
-                System.out.println("Failed to Connect to Server");
+                Log.d("Failed to Connect to Server");
             }
 
             @Override
             public void onResponse (Call call, Response response) throws IOException {
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
 
-                System.out.println("Running!");
-                System.out.println("\nADDING DESCRIPTION\n");
+                Log.d("Running!");
+                Log.d("\nADDING DESCRIPTION\n");
 
                 try {
                     String app_dir = "accessibility";
@@ -508,16 +501,16 @@ public class Description extends AppCompatActivity {
                     File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
-                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                        Log.d("we made accessibility!" + file.getAbsolutePath());
                     }
-                    System.out.println("Writing file");
+                    Log.d("Writing file");
                     BufferedSink data = Okio.buffer(Okio.sink(file));
                     data.writeAll(response.body().source());
                     data.close();
-                    System.out.println("Done writing video file.");
+                    Log.d("Done writing video file.");
                     endtime = System.currentTimeMillis();
-                    System.out.println("Described Video!");
-                    System.out.println("Overlaying audio took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
+                    Log.d("Described Video!");
+                    Log.d("Overlaying audio took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
                     String op=Environment.getExternalStorageDirectory() + "/" + app_dir+"/"+ts.toString()+".mp4";
                     updateUiOKHTTP(context, op);
                 } catch (IOException e) {
@@ -531,8 +524,8 @@ public class Description extends AppCompatActivity {
     public boolean Decision_Description(Context context, String inputPath, int priority){
         long duration;
         duration = DecisionEngine.getVideoLength(context, inputPath);
-        System.out.println("\n\nDURATION OF INPUT VIDEO: " + duration);
-        System.out.println("USER PRIORITY IS " + priority);
+        Log.d("\n\nDURATION OF INPUT VIDEO: " + duration);
+        Log.d("USER PRIORITY IS " + priority);
         //getting average for local
         List<String[]> videos_local = DecisionEngine.getNearestFromCSV(context, 2, duration, 1);
         float local_average = 0;
@@ -553,12 +546,12 @@ public class Description extends AppCompatActivity {
 
         //making offloading decision
         if(remote_average<local_average){
-            System.out.println("\n\nOFFLOADING TASK");
+            Log.d("\n\nOFFLOADING TASK");
             return true;
         }
 
         else{
-            System.out.println("\n\nPERFORMING TASK LOCALLY");
+            Log.d("\n\nPERFORMING TASK LOCALLY");
             return false;
         }
 
@@ -598,28 +591,23 @@ public class Description extends AppCompatActivity {
                         ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                             @Override
                             public void onStart() {
-                                System.out.println("\n---------COMMAND\nSTART\n");
                             }
 
                             @Override
                             public void onProgress(String message) {
-                                System.out.println("Second Task: Progress" + message);
                             }
 
                             @Override
                             public void onFailure(String message) {
-                                System.out.println("\n---------COMMAND\nFAILURE\n" + message);
                             }
 
                             @Override
                             public void onSuccess(String message) {
-                                System.out.println("\n---------COMMAND\nSUCCESS\n");
                             }
 
                             @Override
                             public void onFinish() {
-                                System.out.println("\n---------COMMAND\nFINISH\n");
-                                System.out.println("Path Is:" + output[0]);
+                                Log.d("Path Is:" + output[0]);
                                 updateUi(context,output[0]);
 
                             }
@@ -638,8 +626,7 @@ public class Description extends AppCompatActivity {
             }else{
                 Description.errorUi(context);
             }
-            Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
+            Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
             // Handle if FFmpeg is not supported by device
         }
         return output[0];
@@ -655,7 +642,7 @@ public class Description extends AppCompatActivity {
         final String contentType = "video/mp4";
         final AssetFileDescriptor fd;
         fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
-        System.out.println(selectedFilePath);
+        Log.d(selectedFilePath);
 
         RequestBody videoFile = new RequestBody() {
             @Override
@@ -680,7 +667,7 @@ public class Description extends AppCompatActivity {
                 .addFormDataPart("uploadedVideo", selectedFilePath.substring((selectedFilePath.lastIndexOf('/') + 1), selectedFilePath.length()), videoFile)
                 .build();
 
-        System.out.println("Please Wait");
+        Log.d("Please Wait");
 
         postRequest(context,postUrl, postBodyImage, caller);
     }
@@ -710,15 +697,15 @@ public class Description extends AppCompatActivity {
                     Description.errorUi(context);
                 }
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
-                System.out.println("Failed to Connect to Server");
+                Log.d("Failed to Connect to Server");
             }
 
             @Override
             public void onResponse (Call call, Response response) throws IOException {
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
 
-                System.out.println("Running!");
-                System.out.println("\nCOMPRESSING\n");
+                Log.d("Running!");
+                Log.d("\nCOMPRESSING\n");
                 String op;
                 try {
                     String app_dir = "accessibility";
@@ -727,17 +714,17 @@ public class Description extends AppCompatActivity {
                     File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
-                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                        Log.d("we made accessibility!" + file.getAbsolutePath());
                     }
-                    System.out.println("Writing file");
+                    Log.d("Writing file");
                     BufferedSink data = Okio.buffer(Okio.sink(file));
                     data.writeAll(response.body().source());
                     data.close();
                     Long endtime;
-                    System.out.println("Done writing video file.");
+                    Log.d("Done writing video file.");
                     endtime = System.currentTimeMillis();
-                    System.out.println("Compressed Video!");
-                    System.out.println("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
+                    Log.d("Compressed Video!");
+                    Log.d("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
 
                     updateUiOKHTTP(context,op);
 
@@ -754,8 +741,8 @@ public class Description extends AppCompatActivity {
 
     public static boolean Decision_Compression(Context context, String inputPath, int priority){
         long duration = DecisionEngine.getVideoLength(context, inputPath);
-        System.out.println("\n\nDURATION OF INPUT VIDEO: " + duration);
-        System.out.println("USER PRIORITY IS " + priority);
+        Log.d("\n\nDURATION OF INPUT VIDEO: " + duration);
+        Log.d("USER PRIORITY IS " + priority);
         //getting average for local
         List<String[]> videos_local = DecisionEngine.getNearestFromCSV(context, 1, duration, 1);
         float local_average = 0;
@@ -773,17 +760,17 @@ public class Description extends AppCompatActivity {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        System.out.println("\nREMOTE AVERAGE: " + remote_average);
-        System.out.println("\nLOCAL AVERAGE: " + local_average);
+        Log.d("\nREMOTE AVERAGE: " + remote_average);
+        Log.d("\nLOCAL AVERAGE: " + local_average);
 
         //making offloading decision
         if(remote_average<local_average){
-            System.out.println("\n\nOFFLOADING TASK");
+            Log.d("\n\nOFFLOADING TASK");
             return true;
         }
 
         else{
-            System.out.println("\n\nPERFORMING TASK LOCALLY");
+            Log.d("\n\nPERFORMING TASK LOCALLY");
             return false;
         }
 

@@ -18,7 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.Toast;
-
+import android.util.Log;
 import java.io.File;
 import java.text.ParseException;
 import java.util.List;
@@ -36,7 +36,7 @@ import java.util.List;
         File appDir = new File(Environment.getExternalStorageDirectory() + "/"+"accessibility");
         if (!appDir.exists()) {
             appDir.mkdirs();
-            System.out.println("we made accessibility!"+appDir.getAbsolutePath());
+            Log.d("we made accessibility!"+appDir.getAbsolutePath());
         }
 
         //checking priority mode
@@ -85,7 +85,7 @@ import java.util.List;
         String inputPath=null;
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == this.RESULT_CANCELED) {
-            System.out.println("Error: Choosing source failed");
+            Log.d("Error: Choosing source failed");
             Toast.makeText(this,"Unable to Choose Source", Toast.LENGTH_SHORT);
             return;
         }
@@ -93,11 +93,11 @@ import java.util.List;
             if (data != null) {
                 Uri contentURI = data.getData();
                 String selectedVideoPath = PathExtracter.galleryPath(getApplicationContext(),contentURI);
-                System.out.println("SELECTED VIDEO PATH\n\n\n\n" + selectedVideoPath);
+                Log.d("SELECTED VIDEO PATH\n\n\n\n" + selectedVideoPath);
                 inputPath=selectedVideoPath;
             }
             else{
-                System.out.println("Error: Choosing from gallery failed");
+                Log.d("Error: Choosing from gallery failed");
                 Toast.makeText(this,"No Gallery File Chosen", Toast.LENGTH_SHORT);
             }
         } else if (requestCode == CAMERA) {
@@ -105,7 +105,7 @@ import java.util.List;
             Uri contentURI = data.getData();
             String recordedVideoPath = PathExtracter.galleryPath(getApplicationContext(),contentURI);
             inputPath=recordedVideoPath;
-            System.out.println("RECORDED VIDEO PATH\n\n\n\n" + recordedVideoPath);
+            Log.d("RECORDED VIDEO PATH\n\n\n\n" + recordedVideoPath);
 
         }
         Intent selectAccessibility =new Intent(this, SelectAccessibility.class);

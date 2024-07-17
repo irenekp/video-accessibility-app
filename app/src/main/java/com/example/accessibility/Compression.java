@@ -30,7 +30,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+import android.util.Log;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -79,28 +79,28 @@ public class Compression {
                         ffmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
                             @Override
                             public void onStart() {
-                                System.out.println("\n---------COMMAND\nSTART\n");
+                                Log.d("LOG: Start");
                             }
 
                             @Override
                             public void onProgress(String message) {
-                                System.out.println("Second Task: Progress" + message);
+                                Log.d("LOG: Progress:" + message);
                             }
 
                             @Override
                             public void onFailure(String message) {
-                                System.out.println("\n---------COMMAND\nFAILURE\n" + message);
+                                Log.d("LOG: Failure" + message);
                             }
 
                             @Override
                             public void onSuccess(String message) {
-                                System.out.println("\n---------COMMAND\nSUCCESS\n");
+                                Log.d("LOG: Success");
                             }
 
                             @Override
                             public void onFinish() {
-                                System.out.println("\n---------COMMAND\nFINISH\n");
-                                System.out.println("Path Is:" + output[0]);
+                                Log.d("LOG: Finish");
+                                Log.d("LOG: Video Path Is:" + output[0]);
                                 if(caller==0){
                                     Subtitles.updateUi(context,output[0]);
                                 }else{
@@ -125,8 +125,8 @@ public class Compression {
             }else{
                 Description.errorUi(context);
             }
-            Toast.makeText(context, "issue", Toast.LENGTH_SHORT);
-            System.out.println("\n---------\nISSUE\n");
+            Toast.makeText(context, "ERR!", Toast.LENGTH_SHORT);
+            Log.d("LOG: FFMPED not supported");
             // Handle if FFmpeg is not supported by device
         }
         return output[0];
@@ -142,7 +142,7 @@ public class Compression {
         final String contentType = "video/mp4";
         final AssetFileDescriptor fd;
         fd = contentResolver.openAssetFileDescriptor(Uri.fromFile(new File(selectedFilePath)), "r");
-        System.out.println(selectedFilePath);
+        Log.d(selectedFilePath);
 
         RequestBody videoFile = new RequestBody() {
             @Override
@@ -167,7 +167,7 @@ public class Compression {
                 .addFormDataPart("uploadedVideo", selectedFilePath.substring((selectedFilePath.lastIndexOf('/') + 1), selectedFilePath.length()), videoFile)
                 .build();
 
-        System.out.println("Please Wait");
+        Log.d("Please Wait");
 
         postRequest(context,postUrl, postBodyImage, caller);
     }
@@ -197,15 +197,15 @@ public class Compression {
                     Description.errorUi(context);
                 }
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
-                System.out.println("Failed to Connect to Server");
+                Log.d("Failed to Connect to Server");
             }
 
             @Override
             public void onResponse (Call call, Response response) throws IOException {
                 // In order to access thTextView inside the UI thread, the code is executed inside runOnUiThread()
 
-                System.out.println("Running!");
-                System.out.println("\nCOMPRESSING\n");
+                Log.d("Running!");
+                Log.d("LOG: COMPRESSING");
                 String op;
                 try {
                     String app_dir = "accessibility";
@@ -214,17 +214,17 @@ public class Compression {
                     File file = new File(Environment.getExternalStorageDirectory() + "/" + app_dir, ts.toString()+".mp4");
                     if (!file.getParentFile().exists()) {
                         file.getParentFile().mkdirs();
-                        System.out.println("we made accessibility!" + file.getAbsolutePath());
+                        Log.d("we made accessibility!" + file.getAbsolutePath());
                     }
-                    System.out.println("Writing file");
+                    Log.d("Writing file");
                     BufferedSink data = Okio.buffer(Okio.sink(file));
                     data.writeAll(response.body().source());
                     data.close();
                     Long endtime;
-                    System.out.println("Done writing video file.");
+                    Log.d("Done writing video file.");
                     endtime = System.currentTimeMillis();
-                    System.out.println("Compressed Video!");
-                    System.out.println("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
+                    Log.d("Compressed Video!");
+                    Log.d("Compression took " + (endtime-starttime)/1000 + " seconds and " +(endtime-starttime)%1000 + " milliseconds");
                     if(caller==0){
                         Subtitles.updateUiOKHTTP(context,op);
                     }
@@ -247,8 +247,8 @@ public class Compression {
 
     public static boolean Decision_Compression(Context context, String inputPath, int priority){
         long duration = DecisionEngine.getVideoLength(context, inputPath);
-        System.out.println("\n\nDURATION OF INPUT VIDEO: " + duration);
-        System.out.println("USER PRIORITY IS " + priority);
+        Log.d("\n\nDURATION OF INPUT VIDEO: " + duration);
+        Log.d("USER PRIORITY IS " + priority);
 
         //getting average for local
         List<String[]> videos_local = DecisionEngine.getNearestFromCSV(context, 1, duration, 1);
@@ -267,17 +267,17 @@ public class Compression {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        System.out.println("\nREMOTE AVERAGE: " + remote_average);
-        System.out.println("\nLOCAL AVERAGE: " + local_average);
+        Log.d("\nREMOTE AVERAGE: " + remote_average);
+        Log.d("\nLOCAL AVERAGE: " + local_average);
 
         //making offloading decision
         if(remote_average<local_average){
-            System.out.println("\n\nOFFLOADING TASK");
+            Log.d("\n\nOFFLOADING TASK");
             return true;
         }
 
         else{
-            System.out.println("\n\nPERFORMING TASK LOCALLY");
+            Log.d("\n\nPERFORMING TASK LOCALLY");
             return false;
         }
 

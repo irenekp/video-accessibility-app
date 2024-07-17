@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.util.Log;
 
 import com.opencsv.CSVReader;
 
@@ -94,7 +95,7 @@ public class DecisionEngine {
                     throw new Exception();
                 }
             } catch (Exception e) {
-                System.out.println("Cant Ping Server");
+                Log.d("Cant Ping Server");
                 e.printStackTrace();
             }
             long afterTime = System.currentTimeMillis();
@@ -135,7 +136,7 @@ public class DecisionEngine {
         }
 
         videoSize = Float.toString(durations[idx]);
-        System.out.println("Nearest video length is: " + videoSize);
+        Log.d("Nearest video length is: " + videoSize);
 
         List<String[]> nearestVideos = new ArrayList<>();
 
@@ -145,7 +146,7 @@ public class DecisionEngine {
             List<String[]> fullCSV = reader.readAll();
 
             if (mode == 1) //mode -> 1=local, 2=wifi
-            {   System.out.println("Got here!");
+            {   
                 for (int i = 0; i < fullCSV.size(); i++) {
                         if (fullCSV.get(i)[2].equalsIgnoreCase("Local"))
                         {
@@ -160,7 +161,7 @@ public class DecisionEngine {
                 for (int i = 0; i < fullCSV.size(); i++) {
                     if (fullCSV.get(i)[2].equalsIgnoreCase("Wifi")) {
                         if(Float.parseFloat(fullCSV.get(i)[5]) == Float.parseFloat(videoSize)) {
-                            System.out.println(fullCSV.get(i)[9]);
+                            Log.d(fullCSV.get(i)[9]);
                             nearestVideos.add(fullCSV.get(i));
                         }
                     }
